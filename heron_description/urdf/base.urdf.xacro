@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 This program contains the description of the robot base model for the Clearpath heron
 -->
 
-<robot 
+<robot name="heron"
     xmlns:xi="http://www.w3.org/2001/XInclude"
     xmlns:gazebo="http://playerstage.sourceforge.net/gazebo/xmlschema/#gz"
     xmlns:model="http://playerstage.sourceforge.net/gazebo/xmlschema/#model"
@@ -42,15 +42,101 @@ This program contains the description of the robot base model for the Clearpath 
     xmlns:rendering="http://playerstage.sourceforge.net/gazebo/xmlschema/#rendering"
     xmlns:renderable="http://playerstage.sourceforge.net/gazebo/xmlschema/#renderable"
     xmlns:physics="http://playerstage.sourceforge.net/gazebo/xmlschema/#physics"
-    xmlns:xacro="http://ros.org/wiki/xacro" name="heron">
+    xmlns:xacro="http://ros.org/wiki/xacro" >
 
     <!-- Included URDF/XACRO Files -->
     <xacro:include filename="$(find heron_description)/urdf/materials.urdf.xacro" />
     <xacro:include filename="$(find heron_description)/urdf/parts.urdf.xacro" />
-       
+
     <!-- PROPERTY LIST -->
     <!--All units in m-kg-s-radians unit system -->
-    <property name="M_PI" value="3.1415926535897931" />
+    <xacro:property name="M_PI" value="3.1415926535897931" />
+
+
+    <xacro:property name="x_com" value="0.00000000" /> <!-- com : center of mass -->
+    <xacro:property name="y_com" value="0.00000000" /> <!-- com : center of mass -->
+    <xacro:property name="z_com" value="0.00000000" /> <!-- com : center of mass -->
+
+    <xacro:property name="x_size" value="1.0" /> 
+    <xacro:property name="y_size" value="1.0" /> 
+    <xacro:property name="z_size" value="1.0" />
+
+    <xacro:property name="mass" value="0.1" /> <!-- in kg-->
+
+    <xacro:property name="ixx_com_cs" value="0.01" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
+    <xacro:property name="ixy_com_cs" value="0.0" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
+    <xacro:property name="ixz_com_cs" value="0.0" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
+    <xacro:property name="iyy_com_cs" value="0.01" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
+    <xacro:property name="iyz_com_cs" value="0.00" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
+    <xacro:property name="izz_com_cs" value="0.01" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
+
+    <!-- heron part macro -->
+    <xacro:macro name="heron_part" params="parent name mesh translateX translateY translateZ rotateX rotateY rotateZ color">
+        <joint name="${parent}_${name}_joint" type="fixed">
+            <origin xyz="${translateX} ${translateY} ${translateZ}" 
+                rpy="${rotateX} ${rotateY} ${rotateZ}" />
+            <parent link="${parent}" />
+            <child link="${parent}_${name}_part" />
+        </joint>
+
+        <link name="${parent}_${name}_part">
+            <inertial>
+                <mass value="${mass}" />
+                <origin xyz="${x_com} ${y_com} ${z_com}" />
+                <inertia ixx="${ixx_com_cs}" ixy="${ixy_com_cs}" ixz="${ixz_com_cs}"
+                    iyy="${iyy_com_cs}" iyz="${iyz_com_cs}" izz="${izz_com_cs}" />
+            </inertial>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <mesh filename="package://heron_description/meshes/${mesh}.stl" />
+                </geometry>
+                <material name="${color}" />
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.001 0.001 0.001" /> 
+                    <!--the collision boundary for parts are taken into account 
+                         by collision boundary of the base_link-->
+                </geometry>
+            </collision>
+        </link>
+
+    </xacro:macro>
+
+    <!-- fake wheel part macro -->
+    <xacro:macro name="fake_wheel_part" params="parent pos1 pos2 translateX translateY translateZ rotateX rotateY rotateZ color">
+        <joint name="${pos1}_${pos2}_wheel_joint" type="continuous">
+            <axis xyz="0 1 0"/>
+            <origin xyz="${translateX} ${translateY} ${translateZ}" 
+                rpy="${rotateX} ${rotateY} ${rotateZ}" />
+            <parent link="${parent}" />
+            <child link="${pos1}_${pos2}_wheel_part" />
+        </joint>
+
+        <link name="${pos1}_${pos2}_wheel_part">
+            <inertial>
+                <mass value="0.01" />
+                <inertia ixx="0.001" ixy="0" ixz="0"
+                    iyy="0.001" iyz="0" izz="0.001" />
+            </inertial>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 ${M_PI/2} 0"/>
+                <geometry>
+                    <cylinder length="0.01" radius="0.05" /> 
+                </geometry>
+                <material name="${color}" />
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 ${M_PI/2} 0"/>
+                <geometry>
+                    <cylinder length="0.01" radius="0.05" /> 
+                </geometry>
+            </collision>
+        </link>
+
+    </xacro:macro>
 
     <!-- BASE-FOOTPRINT -->
     <!-- base_footprint is a fictitious link(frame) that is on the ground right below base_link origin, navigation stack depends on this frame -->
@@ -76,7 +162,7 @@ This program contains the description of the robot base model for the Clearpath 
     </gazebo>
 
     <joint name="base_footprint_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <parent link="base_footprint"/>
         <child link="base_link" />
     </joint>
@@ -87,12 +173,17 @@ This program contains the description of the robot base model for the Clearpath 
     <link name="base_link">
         <inertial>
             <mass value="29" />
-            <!--This is the pose of the inertial reference frame, relative to the link reference frame. The origin of the inertial reference frame needs to be at the center of gravity. The axes of the inertial reference frame do not need to be aligned with the principal axes of the inertia.-->
+            <!--This is the pose of the inertial reference frame, relative to the link reference frame. 
+                 The origin of the inertial reference frame needs to be at the center of gravity. 
+                 The axes of the inertial reference frame do not need to be aligned with the principal axes of the inertia.-->
             <origin xyz="0 0 0" />
-            <!--The 3x3 rotational inertia matrix. Because the rotational inertia matrix is symmetric, only 6 above-diagonal elements of this matrix are specified here, using the attributes ixx, ixy, ixz, iyy, iyz, izz.-->
+            <!--The 3x3 rotational inertia matrix. 
+                 Because the rotational inertia matrix is symmetric, 
+                 only 6 above-diagonal elements of this matrix are specified here, 
+                 using the attributes ixx, ixy, ixz, iyy, iyz, izz.-->
             <inertia ixx="10" ixy="0" ixz="0" iyy="10" iyz="0" izz="10" /> 
         </inertial>
-        
+
         <visual>
             <origin xyz="0 0 0" rpy="${M_PI/2} 0 ${M_PI/2}" />
             <geometry>
@@ -100,11 +191,12 @@ This program contains the description of the robot base model for the Clearpath 
             </geometry>
             <material name="DarkGray" />
         </visual>
-    
+
         <collision>
-          <origin xyz="0 0 0" rpy="0 0 0" />
-          <geometry>
-                <box size = "0.1 0.1 0.1"/> <!--making it slightly bigger in x and z direction-->
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <box size = "0.1 0.1 0.1"/> 
+                <!--making it slightly bigger in x and z direction-->
             </geometry>
         </collision>     
     </link>
@@ -115,21 +207,42 @@ This program contains the description of the robot base model for the Clearpath 
 
     <!-- PANEL-LINKS -->
     <!-- Top Plate -->
-    <heron_part parent="base_footprint" name="left_panel" mesh="left_panel" 
-          translateX="0.0" translateY="-0.35" translateZ="0.05" 
-          rotateX="${M_PI/2}" rotateY="0.0" rotateZ="${M_PI/2}"
-          color="Yellow" />
+    <xacro:heron_part parent="base_footprint" name="left_panel" mesh="left_panel" 
+        translateX="0.0" translateY="-0.35" translateZ="0.05" 
+        rotateX="${M_PI/2}" rotateY="0.0" rotateZ="${M_PI/2}"
+        color="Yellow" />
     <gazebo reference="base_footprint_left_panel_part">
         <material>Gazebo/Yellow</material>
     </gazebo>
 
-    <heron_part parent="base_footprint" name="right_panel" mesh="right_panel" 
-          translateX="0.0" translateY="0.35" translateZ="0.05" 
-          rotateX="${M_PI/2}" rotateY="0.0" rotateZ="${-M_PI/2}"
-          color="Yellow" />
+    <xacro:heron_part parent="base_footprint" name="right_panel" mesh="right_panel" 
+        translateX="0.0" translateY="0.35" translateZ="0.05" 
+        rotateX="${M_PI/2}" rotateY="0.0" rotateZ="${-M_PI/2}"
+        color="Yellow" />
     <gazebo reference="base_footprint_right_panel_part">
         <material>Gazebo/Yellow</material>
     </gazebo>
+
+    <!--fake wheels 
+    <xacro:fake_wheel_part parent="base_footprint_left_panel_part" pos1="front" pos2="left"
+        translateX="0" translateY="0.35" translateZ="-0.5" 
+        rotateX="0" rotateY="0.0" rotateZ="0.0"
+        color="White" />
+
+    <xacro:fake_wheel_part parent="base_footprint_left_panel_part" pos1="back" pos2="left"
+        translateX="0" translateY="-0.35" translateZ="-0.5" 
+        rotateX="0" rotateY="0.0" rotateZ="0.0"
+        color="White" />
+
+    <xacro:fake_wheel_part parent="base_footprint_right_panel_part" pos1="front" pos2="right"
+        translateX="0" translateY="0.35" translateZ="-0.5" 
+        rotateX="0" rotateY="0.0" rotateZ="0.0"
+        color="White" />
+
+    <xacro:fake_wheel_part parent="base_footprint_right_panel_part" pos1="back" pos2="right"
+        translateX="0" translateY="-0.35" translateZ="-0.5" 
+        rotateX="0" rotateY="0.0" rotateZ="0.0"
+        color="White" /> -->
 
     <!--Gazebo Plugin for simulating heron dynamics,
          currently not able to hack
@@ -144,5 +257,5 @@ This program contains the description of the robot base model for the Clearpath 
             <rolPitDampingFactor>5.0</rolPitDampingFactor>
         </plugin>
     </gazebo>-->
-        
+
 </robot>

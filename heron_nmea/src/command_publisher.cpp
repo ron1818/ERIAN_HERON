@@ -2,7 +2,7 @@
  *
  *  \file
  *  \brief      C++ implementation of the NMEA -> cmd_* command
-                republisher for Kingfisher.
+                republisher for heron.
  *  \author     Mike Purvis <mpurvis@clearpathrobotics.com>
  *  \copyright  Copyright (c) 2015, Clearpath Robotics, Inc.
  *
@@ -37,9 +37,9 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
 
-#include "kingfisher_msgs/Course.h"
-#include "kingfisher_msgs/Drive.h"
-#include "kingfisher_msgs/Helm.h"
+#include "heron_msgs/Course.h"
+#include "heron_msgs/Drive.h"
+#include "heron_msgs/Helm.h"
 #include "nmea_msgs/Sentence.h"
 #include "ros/ros.h"
 
@@ -112,14 +112,14 @@ class DrivePublisher : public Helper
 public:
   DrivePublisher(ros::NodeHandle* nh) :
     Helper(nh, "PYDIR", boost::bind(&DrivePublisher::cb, this, _1)),
-    pub_(nh->advertise<kingfisher_msgs::Drive>("cmd_drive", 1))
+    pub_(nh->advertise<heron_msgs::Drive>("cmd_drive", 1))
   {
   }
 
 private:
   void cb(const ros::V_string& fields)
   {
-    kingfisher_msgs::Drive drive_msg;
+    heron_msgs::Drive drive_msg;
     drive_msg.left = boost::lexical_cast<double>(fields[0]) * 0.01;
     drive_msg.right = boost::lexical_cast<double>(fields[1]) * 0.01;
     pub_.publish(drive_msg);
@@ -134,14 +134,14 @@ class HelmPublisher : public Helper
 public:
   HelmPublisher(ros::NodeHandle* nh) :
     Helper(nh, "PYDEP", boost::bind(&HelmPublisher::cb, this, _1)),
-    pub_(nh->advertise<kingfisher_msgs::Helm>("cmd_helm", 1))
+    pub_(nh->advertise<heron_msgs::Helm>("cmd_helm", 1))
   {
   }
 
 private:
   void cb(const ros::V_string& fields)
   {
-    kingfisher_msgs::Helm helm_msg;
+    heron_msgs::Helm helm_msg;
     helm_msg.yaw_rate = boost::lexical_cast<double>(fields[0]) * TO_RADIANS * -1;
     helm_msg.thrust = boost::lexical_cast<double>(fields[1]) * 0.01;
     pub_.publish(helm_msg);
@@ -156,14 +156,14 @@ class CoursePublisher : public Helper
 public:
   CoursePublisher(ros::NodeHandle* nh) :
     Helper(nh, "PYDEV", boost::bind(&CoursePublisher::cb, this, _1)),
-    pub_(nh->advertise<kingfisher_msgs::Course>("cmd_course", 1))
+    pub_(nh->advertise<heron_msgs::Course>("cmd_course", 1))
   {
   }
 
 private:
   void cb(const ros::V_string& fields)
   {
-    kingfisher_msgs::Course course_msg;
+    heron_msgs::Course course_msg;
     course_msg.yaw = (90 - boost::lexical_cast<double>(fields[0])) * TO_RADIANS;
     course_msg.speed = boost::lexical_cast<double>(fields[1]);
     pub_.publish(course_msg);
@@ -174,7 +174,7 @@ private:
 
 
 int main(int argc, char **argv) {
-  ros::init(argc, argv, "kingfisher_nmea_command_publisher");
+  ros::init(argc, argv, "heron_nmea_command_publisher");
 
   ros::NodeHandle nh;
   DrivePublisher dp(&nh);

@@ -32,57 +32,150 @@ parameters account for the decorative parts. Decorative parts currently do not
 incorporate collision.
 -->
 
-<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
-	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
-	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
-	xmlns:xacro="http://ros.org/wiki/xacro" name="heron_part">
-	
-	<property name="x_com" value="0.00000000" /> <!-- com : center of mass -->
-	<property name="y_com" value="0.00000000" /> <!-- com : center of mass -->
-	<property name="z_com" value="0.00000000" /> <!-- com : center of mass -->
-	
-	<property name="x_size" value="1.0" /> 
-	<property name="y_size" value="1.0" /> 
-	<property name="z_size" value="1.0" />
-	
-	<property name="mass" value="0.1" /> <!-- in kg-->
-	
-	<property name="ixx_com_cs" value="0.01" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
-	<property name="ixy_com_cs" value="0.0" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
-	<property name="ixz_com_cs" value="0.0" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
-	<property name="iyy_com_cs" value="0.01" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
-	<property name="iyz_com_cs" value="0.00" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
-	<property name="izz_com_cs" value="0.01" /> <!-- at center of mass aligned with coordinate system, kg*m^2-->
-	
-	<xacro:macro name="heron_part" params="parent name mesh translateX translateY translateZ rotateX rotateY rotateZ color">
-		<joint name="${parent}_${name}_joint" type="fixed">
-		    <origin xyz="${translateX} ${translateY} ${translateZ}" 
-		            rpy="${rotateX} ${rotateY} ${rotateZ}" />
-		    <parent link="${parent}" />
-		    <child link="${parent}_${name}_part" />
-		</joint>
-		
-		<link name="${parent}_${name}_part">
-			<inertial>
-				<mass value="${mass}" />
-				<origin xyz="${x_com} ${y_com} ${z_com}" />
-				<inertia ixx="${ixx_com_cs}" ixy="${ixy_com_cs}" ixz="${ixz_com_cs}"
-					iyy="${iyy_com_cs}" iyz="${iyz_com_cs}" izz="${izz_com_cs}" />
-			</inertial>
-			<visual>
-				<origin xyz="0 0 0" rpy="0 0 0" />
-				<geometry>
-					<mesh filename="package://heron_description/meshes/${mesh}.stl" />
-				</geometry>
-        <material name="${color}" />
-			</visual>
-			<collision>
-				<origin xyz="0 0 0" rpy="0 0 0"/>
-				<geometry>
-					<box size="0.001 0.001 0.001" /> <!--the collision boundary for parts are taken into account by collision boundary of the base_link-->
-				</geometry>
-			</collision>
-		</link>
-		
-  	</xacro:macro>
+<robot name="heron_sensors"
+    xmlns:xacro="http://ros.org/wiki/xacro" >
+
+    <xacro:property name="M_PI" value="3.1415926535897931" />
+    <!-- kinect camera -->
+    <joint name="kinect_camera_joint" type="fixed">
+        <!--<xacro:insert_block name="origin" />-->
+        <origin xyz="-0.1 -0.1 0.15" rpy="0 0 0" />
+        <parent link="base_link"/>
+        <child link="kinect_camera_link"/>
+    </joint>
+
+    <link name="kinect_camera_link">
+        <xacro:inertial_sphere mass="0.01" diameter="0.07" />
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://hector_sensors_description/meshes/kinect_camera/kinect_camera_simple.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://hector_sensors_description/meshes/kinect_camera/kinect_camera_simple.stl"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="kinect_camera_depth_joint" type="fixed">
+        <origin xyz="0.0 -0.02 0.0" rpy="0 0 0" />
+        <parent link="kinect_camera_link" />
+        <child link="kinect_camera_depth_frame"/>
+    </joint>
+
+    <link name="kinect_camera_depth_frame"/>
+
+    <joint name="kinect_camera_depth_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${-M_PI/2} 0.0 ${-M_PI/2}" />
+        <parent link="kinect_camera_depth_frame" />
+        <child link="kinect_camera_depth_optical_frame"/>
+    </joint>
+
+    <link name="kinect_camera_depth_optical_frame"/>
+
+    <joint name="kinect_camera_rgb_joint" type="fixed">
+        <origin xyz="0.0 -0.0125 0.0" rpy="0 0 0" />
+        <parent link="kinect_camera_link" />
+        <child link="kinect_camera_rgb_frame"/>
+    </joint>
+
+    <link name="kinect_camera_rgb_frame"/>
+
+    <joint name="kinect_camera_rgb_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${-M_PI/2} 0.0 ${-M_PI/2}" />
+        <parent link="kinect_camera_rgb_frame" />
+        <child link="kinect_camera_rgb_optical_frame"/>
+    </joint>
+
+    <link name="kinect_camera_rgb_optical_frame"/>
+
+
+    <!-- Set up camera linkage and configuration -->
+    <joint name="camera_joint" type="fixed">
+        <origin xyz="0.25 0.1 0.1" rpy="0 0 0" />
+        <parent link="base_link"/>
+        <child link="camera_link" />
+    </joint>
+
+
+    <link name="camera_link">
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.02 0.02 0.02" /> 
+            </geometry>
+        </collision>
+
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.02 0.02 0.02" /> 
+            </geometry>
+            <material name="Yellow"/>
+        </visual>
+    </link>
+
+
+    <xacro:if value="$(arg sonar_enabled)"> 
+        <!-- Set up sonar linkage and configuration -->
+        <joint name="base_link_sonar_link_joint" type="fixed">
+            <origin xyz="0 0 -0.1" rpy="0 1.57 0" />
+            <parent link="base_link"/>
+            <child link="sonar_link" />
+        </joint>
+
+        <link name="sonar_link">
+            <inertial>
+                <mass value="1"/>
+                <origin xyz="0 0 0"/>
+                <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1"/>
+            </inertial>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <mesh filename="package://hector_sensors_description/meshes/sonar_sensor/max_sonar_ez4.dae"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="0.02 0.02 0.02" />
+                </geometry>
+            </collision>
+        </link>
+    </xacro:if>
+
+    <joint name="hokuyo_joint" type="fixed">
+        <axis xyz="0 1 0" />
+        <origin xyz="0.2 0.15 0.15" rpy="0 0 0"/>
+        <parent link="base_link"/>
+        <child link="hokuyo_link"/>
+    </joint>
+
+    <!-- Hokuyo Laser -->
+    <link name="hokuyo_link">
+        <collision>
+            <origin xyz="0 0 -0.0115" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.058 0.058 0.087"/>
+            </geometry>
+        </collision>
+
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://hector_sensors_description/meshes/hokuyo_utm30lx/hokuyo_utm_30lx.dae"/>
+            </geometry>
+        </visual>
+
+        <inertial>
+            <mass value="0.27" />
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="2.632e-4" ixy="0" ixz="0" iyy="2.632e-4" iyz="0" izz="1.62e-4" />
+        </inertial>
+    </link>
+
 </robot>
