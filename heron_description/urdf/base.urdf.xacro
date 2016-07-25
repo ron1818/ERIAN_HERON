@@ -138,16 +138,15 @@ This program contains the description of the robot base model for the Clearpath 
 
     </xacro:macro>
 
-    <!--world -->
+    <!--world >
     <link name="world" />
-    <!--world to base footprint joint -->
     <joint name="world_base_joint" type="floating">
         <axis xyz="0 0 1"/>
         <parent link="world"/>
         <child link="base_footprint"/>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <dynamics damping="0.01" friction="0.01"/>
-    </joint>
+    </joint-->
 
     <!-- BASE-FOOTPRINT -->
     <!-- base_footprint is a fictitious link(frame) that is on the ground right below base_link origin, navigation stack depends on this frame -->
@@ -256,9 +255,9 @@ This program contains the description of the robot base model for the Clearpath 
         color="White" /> -->
 
     <!--Gazebo Plugin for simulating heron dynamics,
-         currently not able to hack
+         currently not able to hack-->
     <gazebo>
-      <plugin name="heron_dynamic" filename="libheron_gazebo_plugins.so">
+        <plugin name="heron_dynamic" filename="$(find heron_gazebo)/plugins/libkingfisher_gazebo_plugins.so">
             <maxForce>62.0</maxForce>
             <bodyName>base_link</bodyName>
             <waterDensity>997.7735</waterDensity>
@@ -267,6 +266,6 @@ This program contains the description of the robot base model for the Clearpath 
             <yawDampingFactor>20.0</yawDampingFactor>
             <rolPitDampingFactor>5.0</rolPitDampingFactor>
         </plugin>
-    </gazebo>-->
+    </gazebo>
 
 </robot>
