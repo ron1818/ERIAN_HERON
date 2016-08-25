@@ -45,7 +45,12 @@ incorporate collision.
     </joint>
 
     <link name="kinect_camera_link">
-        <xacro:inertial_sphere mass="0.01" diameter="0.07" />
+        <!--xacro:inertial_sphere mass="0.01" diameter="0.07" /-->
+        <inertial>
+                <mass value="0.01" />
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <inertia ixx="2.632e-4" ixy="0" ixz="0" iyy="2.632e-4" iyz="0" izz="1.62e-4" />
+            </inertial>
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>

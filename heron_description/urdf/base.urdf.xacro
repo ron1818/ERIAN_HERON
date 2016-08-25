@@ -255,7 +255,7 @@ This program contains the description of the robot base model for the Clearpath 
         color="White" /> -->
 
     <!--Gazebo Plugin for simulating heron dynamics,
-         currently not able to hack-->
+         currently not able to hack>
     <gazebo>
         <plugin name="heron_dynamic" filename="$(find heron_gazebo)/plugins/libkingfisher_gazebo_plugins.so">
             <maxForce>62.0</maxForce>
@@ -266,6 +266,6 @@ This program contains the description of the robot base model for the Clearpath 
             <yawDampingFactor>20.0</yawDampingFactor>
             <rolPitDampingFactor>5.0</rolPitDampingFactor>
         </plugin>
-    </gazebo>
+    </gazebo-->
 
 </robot>
