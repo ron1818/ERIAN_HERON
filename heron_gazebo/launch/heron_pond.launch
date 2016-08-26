@@ -1,25 +1,31 @@
 <launch>
 
-  <!-- these are the arguments you can pass this launch file, for example paused:=true -->
-  <arg name="paused" default="false"/>
-  <arg name="use_sim_time" default="true"/>
-  <arg name="gui" default="true"/>
-  <arg name="headless" default="false"/>
-  <arg name="debug" default="false"/>
-  <arg name="sonar_enabled" default="$(optenv KF_SIM_WITH_SONAR true)"/>
+    <!-- these are the arguments you can pass this launch file, for example paused:=true -->
+    <arg name="paused" default="false"/>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="headless" default="false"/>
+    <arg name="debug" default="false"/>
+    <arg name="sonar_enabled" default="$(optenv KF_SIM_WITH_SONAR true)"/>
 
-  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
-  <include file="$(find heron_gazebo)/launch/pond_world.launch" />
+    <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+    <include file="$(find heron_gazebo)/launch/pond_world.launch" >
+        <arg name="use_sim_time" default="$(arg use_sim_time)"/>
+        <arg name="gui" default="$(arg gui)"/>
+        <arg name="headless" default="$(arg headless)"/>
+        <arg name="debug" default="$(arg debug)"/>
+    </include>
 
-  <!-- Load the URDF into the ROS Parameter Server -->
-  <param name="robot_description"
-	 command="$(find xacro)/xacro '$(find heron_description)/urdf/standard.urdf.xacro' sonar_enabled:=$(arg sonar_enabled)" />
+    <!-- Load the URDF into the ROS Parameter Server -->
+    <include file="$(find heron_description)/launch/description.launch" >
+        <arg name="sonar_enabled" value="$(arg sonar_enabled)"/>
+    </include>
 
-  <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
-  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-	args="-urdf -model heron -param robot_description"/>
+        <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+        <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -model heron -param robot_description"/>
 
-  <!-- ros_control rrbot launch file -->
-  <!--include file="$(find heron_control)/launch/heron_control.launch" /-->
+        <!-- ros_control rrbot launch file -->
+        <!--include file="$(find heron_control)/launch/heron_control.launch" /-->
 
-</launch>
+    </launch>

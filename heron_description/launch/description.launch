@@ -1,9 +1,11 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="sonar_enabled" value="true"/>
+    <arg name="sonar_enabled" default="$(optenv KF_SIM_WITH_SONAR true"/>
 
-  <!-- Send the Kingfisher Robot URDF/XACRO to param server -->
+  <!-- Send the heron Robot URDF/XACRO to param server -->
   <param name="robot_description" command="$(find xacro)/xacro '$(find heron_description)/urdf/standard.urdf.xacro' sonar_enabled:=$(arg sonar_enabled)" />
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+  <!--node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /-->
 </launch>
